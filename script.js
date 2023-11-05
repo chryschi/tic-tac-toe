@@ -39,9 +39,7 @@ const gameboard = (function () {
         }
       }
     }
-    // console.log(`last filled Position Index ${lastFilledPositionIndex}`);
     return false;
-    // return `${playerSymbol}, ${lastFilledPositionIndex}`;
   };
 
   const displayBoard = () => console.log(gameboardContent);
@@ -60,33 +58,12 @@ function player(name, symbol) {
   return { getName, symbol, setName };
 }
 
-const playGame = () => {
-  const gameOne = game();
-  gameOne.startGame();
-
-  for (let i = 0; i < 9; i++) {
-    gameOne.playTurn(gameOne.getCurrentPlayer());
-    if (i > 3) {
-      if (gameOne.getWinnerFound()) {
-        console.log(`Congrats! ${gameOne.getWinner().getName()} has won!`);
-        break;
-      }
-    }
-  }
-  if (!gameOne.getWinnerFound()) {
-    console.log(`It's a tie.`);
-  }
-  // continuePlaying = prompt(
-  //   `Down for another game? Press "Enter" for yes, submit anything else than "Y" or Press "Cancel" for no`,
-  //   "Y"
-  // );
-};
-
 function game() {
   const playerOne = player("Player 1", "X");
   const playerTwo = player("Player 2", "O");
   let numberOfFilledFields = 0;
   let currentPlayer;
+  let currentPositionIndex = null;
   let winnerFound;
   let winnerPlayer;
 
@@ -110,53 +87,58 @@ function game() {
     displayController.renderGameboard();
     console.log("Welcome to Tic Tac Toe!");
 
-    // let playerOneName = prompt(
-    //   "How does Player 1 want to be called?",
-    //   "Hello Kitty"
-    // );
-    // playerOne.setName(playerOneName);
-
-    // let playerTwoName = prompt(
-    //   "How does Player 2 want to be called?",
-    //   "Wolfgang"
-    // );
-    // playerTwo.setName(playerTwoName);
-
     currentPlayer = playerOne;
 
     console.log("Nice! Let's begin!");
     gameboard.displayBoard();
   };
 
-  const randomPosition = () => Math.floor(Math.random() * 9);
-
-  const playTurn = (currentPlayer) => {
-    const currentPlayerName = currentPlayer.getName();
-    let positionIndex = randomPosition();
-
-    while (gameboard.contentOfField(positionIndex) != "") {
-      console.log(`Sorry! Position ${positionIndex} is already filled!`);
-      positionIndex = randomPosition();
-    }
-    console.log(`${currentPlayerName} picked position ${positionIndex}!`);
-    gameboard.setMarker(currentPlayer.symbol, positionIndex);
-    displayController.renderGameboard();
-    numberOfFilledFields++;
-    if (numberOfFilledFields > 4) {
-      winnerFound = gameboard.checkWin(currentPlayer.symbol, positionIndex);
-      if (winnerFound) {
-        winnerPlayer = currentPlayer;
-        console.log(`winner: ${winnerPlayer.getName()}`);
+  const checkForWinner = () => {
+    winnerFound = gameboard.checkWin(
+      currentPlayer.symbol,
+      currentPositionIndex
+    );
+    if (winnerFound) {
+      winnerPlayer = currentPlayer;
+      console.log(`winner: ${winnerPlayer.getName()}`);
+      console.log(`Congrats! ${gameOne.getWinner().getName()} has won!`);
+      displayController.mountNewGameButton();
+      displayController.unableGameboard();
+    } else {
+      if (numberOfFilledFields === 9) {
+        console.log(`It's a tie.`);
+        displayController.mountNewGameButton();
+        displayController.unableGameboard();
       }
-      console.log(`winner Found? : ${winnerFound}`);
     }
-
-    switchPlayer();
-    gameboard.displayBoard();
+    console.log(`winner Found? : ${winnerFound}`);
   };
 
   const getWinnerFound = () => winnerFound;
   const getWinner = () => winnerPlayer;
+  const playTurn = (event) => {
+    const targetPosition = event.target.id;
+    if (gameboard.contentOfField(targetPosition) !== "") {
+      console.log(`Sorry! Position ${targetPosition} is already filled!`);
+    } else {
+      const currentPlayerName = currentPlayer.getName();
+
+      currentPositionIndex = targetPosition;
+      gameboard.setMarker(currentPlayer.symbol, currentPositionIndex);
+      console.log(
+        `${currentPlayerName} picked position ${currentPositionIndex}!`
+      );
+      displayController.renderGameboard();
+      numberOfFilledFields++;
+      console.log(numberOfFilledFields);
+      if (numberOfFilledFields > 4) {
+        checkForWinner();
+      }
+
+      switchPlayer();
+      gameboard.displayBoard();
+    }
+  };
 
   return {
     startGame,
@@ -167,7 +149,6 @@ function game() {
   };
 }
 
-// handle DOM
 const displayController = (function () {
   const gameboardContainer = document.querySelector("#gameboard-container");
 
@@ -177,6 +158,7 @@ const displayController = (function () {
       const field = document.createElement("div");
       field.setAttribute("id", `${i}`);
       field.textContent = `${gameboard.contentOfField(i)}`;
+      field.addEventListener("click", gameOne.playTurn);
       gameboardContainer.appendChild(field);
     }
   };
@@ -187,9 +169,38 @@ const displayController = (function () {
     }
   };
 
-  return { renderGameboard };
+  const unableGameboard = () => {
+    for (let i = 0; i < 9; i++) {
+      const field = document.getElementById(`${i}`);
+      field.removeEventListener("click", gameOne.playTurn);
+    }
+  };
+
+  const mountNewGameButton = () => {
+    const newGameButton = document.createElement("button");
+    newGameButton.textContent = "NEW GAME";
+    newGameButton.addEventListener("click", () => {
+      unmountNewGameButton();
+      gameOne = game();
+      gameOne.startGame();
+    });
+    document.body.appendChild(newGameButton);
+  };
+
+  const unmountNewGameButton = () => {
+    const newGameButton = document.querySelector("button");
+    document.body.removeChild(newGameButton);
+  };
+
+  return {
+    renderGameboard,
+    mountNewGameButton,
+    unmountNewGameButton,
+    unableGameboard,
+  };
 })();
 
-playGame();
+let gameOne = game();
+gameOne.startGame();
 
 console.log(`Thanks for playing!`);
