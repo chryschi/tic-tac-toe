@@ -85,6 +85,7 @@ function game() {
   const startGame = () => {
     gameboard.initBoard();
     displayController.renderGameboard();
+    displayController.enableGameboard();
     currentPlayer = playerOne;
     displayController.setGameMasterMessage(
       `It's ${currentPlayer.getName()}'s turn!`
@@ -106,13 +107,11 @@ function game() {
         `Congrats! ${gameOne.getWinner().getName()} has won!`
       );
       displayController.changeStartButtonName("NEW GAME");
-      displayController.unableGameboard();
     } else if (numberOfFilledFields === 9) {
       console.log(`It's a tie.`);
       winnerFound = true;
       displayController.setGameMasterMessage(`It's a tie.`);
       displayController.changeStartButtonName("NEW GAME");
-      displayController.unableGameboard();
     }
 
     console.log(`winner Found? : ${winnerFound}`);
@@ -147,6 +146,7 @@ function game() {
         displayController.setGameMasterMessage(
           `It's ${currentPlayer.getName()}'s turn!`
         );
+        displayController.enableGameboard();
         gameboard.displayBoard();
       }
     }
@@ -165,21 +165,9 @@ const displayController = (function () {
   const gameboardContainer = document.querySelector("#gameboard-container");
   const gameMasterDisplay = document.querySelector("#game-master");
 
-  const showNewGameDisplay = () => {};
-
   const renderGameboard = () => {
     emptyGameboardContainer();
-    for (let i = 0; i < 9; i++) {
-      const field = document.createElement("div");
-      field.setAttribute("id", `${i}`);
-      field.textContent = `${gameboard.contentOfField(i)}`;
-      field.addEventListener("click", gameOne.playTurn);
-      gameboardContainer.appendChild(field);
-    }
-  };
-
-  const setGameMasterMessage = (newMessage) => {
-    gameMasterDisplay.textContent = newMessage;
+    createGameboardFields();
   };
 
   const emptyGameboardContainer = () => {
@@ -188,28 +176,31 @@ const displayController = (function () {
     }
   };
 
-  const unableGameboard = () => {
+  const createGameboardFields = () => {
+    for (let i = 0; i < 9; i++) {
+      const field = document.createElement("div");
+      field.setAttribute("id", `${i}`);
+      field.textContent = `${gameboard.contentOfField(i)}`;
+      gameboardContainer.appendChild(field);
+    }
+  };
+
+  const enableGameboard = () => {
+    for (let i = 0; i < 9; i++) {
+      const field = document.getElementById(`${i}`);
+      field.addEventListener("click", gameOne.playTurn);
+    }
+  };
+
+  const disableGameboard = () => {
     for (let i = 0; i < 9; i++) {
       const field = document.getElementById(`${i}`);
       field.removeEventListener("click", gameOne.playTurn);
     }
   };
 
-  const mountNewGameButton = () => {
-    const newGameButton = document.createElement("button");
-    newGameButton.setAttribute("id", "newGame-button");
-    newGameButton.textContent = "NEW GAME";
-    newGameButton.addEventListener("click", () => {
-      unmountNewGameButton();
-      gameOne = game();
-      gameOne.startGame();
-    });
-    document.body.appendChild(newGameButton);
-  };
-
-  const unmountNewGameButton = () => {
-    const newGameButton = document.querySelector("button");
-    document.body.removeChild(newGameButton);
+  const setGameMasterMessage = (newMessage) => {
+    gameMasterDisplay.textContent = newMessage;
   };
 
   const mountStartGameButton = () => {
@@ -235,13 +226,15 @@ const displayController = (function () {
 
   return {
     renderGameboard,
-    mountNewGameButton,
-    unmountNewGameButton,
     mountStartGameButton,
-    unableGameboard,
+    disableGameboard,
     setGameMasterMessage,
     changeStartButtonName,
+    enableGameboard,
   };
 })();
 
+let gameOne;
 displayController.mountStartGameButton();
+gameboard.initBoard();
+displayController.renderGameboard();
