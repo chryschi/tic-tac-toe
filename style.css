@@ -1,14 +1,19 @@
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 #gameboard-container {
   height: 96px;
   width: 96px;
   display: flex;
   flex-wrap: wrap;
+  border: 1px solid black;
 }
 
 #gameboard-container > div {
-  border-style: solid;
-  border-color: black;
-  border-width: 1px;
+  border: 1px solid black;
   width: 30px;
   height: 30px;
 }

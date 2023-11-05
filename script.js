@@ -64,7 +64,7 @@ function game() {
   let numberOfFilledFields = 0;
   let currentPlayer;
   let currentPositionIndex = null;
-  let winnerFound;
+  let winnerFound = false;
   let winnerPlayer;
 
   const getCurrentPlayer = () => currentPlayer;
@@ -85,11 +85,11 @@ function game() {
   const startGame = () => {
     gameboard.initBoard();
     displayController.renderGameboard();
-    console.log("Welcome to Tic Tac Toe!");
-
     currentPlayer = playerOne;
+    displayController.setGameMasterMessage(
+      `It's ${currentPlayer.getName()}'s turn!`
+    );
 
-    console.log("Nice! Let's begin!");
     gameboard.displayBoard();
   };
 
@@ -102,15 +102,19 @@ function game() {
       winnerPlayer = currentPlayer;
       console.log(`winner: ${winnerPlayer.getName()}`);
       console.log(`Congrats! ${gameOne.getWinner().getName()} has won!`);
-      displayController.mountNewGameButton();
+      displayController.setGameMasterMessage(
+        `Congrats! ${gameOne.getWinner().getName()} has won!`
+      );
+      displayController.changeStartButtonName("NEW GAME");
       displayController.unableGameboard();
-    } else {
-      if (numberOfFilledFields === 9) {
-        console.log(`It's a tie.`);
-        displayController.mountNewGameButton();
-        displayController.unableGameboard();
-      }
+    } else if (numberOfFilledFields === 9) {
+      console.log(`It's a tie.`);
+      winnerFound = true;
+      displayController.setGameMasterMessage(`It's a tie.`);
+      displayController.changeStartButtonName("NEW GAME");
+      displayController.unableGameboard();
     }
+
     console.log(`winner Found? : ${winnerFound}`);
   };
 
@@ -118,11 +122,14 @@ function game() {
   const getWinner = () => winnerPlayer;
   const playTurn = (event) => {
     const targetPosition = event.target.id;
+    const currentPlayerName = currentPlayer.getName();
+
     if (gameboard.contentOfField(targetPosition) !== "") {
+      displayController.setGameMasterMessage(
+        `Sorry! Position ${targetPosition} is already filled! Try again, ${currentPlayerName}!`
+      );
       console.log(`Sorry! Position ${targetPosition} is already filled!`);
     } else {
-      const currentPlayerName = currentPlayer.getName();
-
       currentPositionIndex = targetPosition;
       gameboard.setMarker(currentPlayer.symbol, currentPositionIndex);
       console.log(
@@ -131,12 +138,17 @@ function game() {
       displayController.renderGameboard();
       numberOfFilledFields++;
       console.log(numberOfFilledFields);
+      console.log(`winnerfound?: ${winnerFound}`);
       if (numberOfFilledFields > 4) {
         checkForWinner();
       }
-
-      switchPlayer();
-      gameboard.displayBoard();
+      if (!winnerFound) {
+        switchPlayer();
+        displayController.setGameMasterMessage(
+          `It's ${currentPlayer.getName()}'s turn!`
+        );
+        gameboard.displayBoard();
+      }
     }
   };
 
@@ -151,6 +163,9 @@ function game() {
 
 const displayController = (function () {
   const gameboardContainer = document.querySelector("#gameboard-container");
+  const gameMasterDisplay = document.querySelector("#game-master");
+
+  const showNewGameDisplay = () => {};
 
   const renderGameboard = () => {
     emptyGameboardContainer();
@@ -161,6 +176,10 @@ const displayController = (function () {
       field.addEventListener("click", gameOne.playTurn);
       gameboardContainer.appendChild(field);
     }
+  };
+
+  const setGameMasterMessage = (newMessage) => {
+    gameMasterDisplay.textContent = newMessage;
   };
 
   const emptyGameboardContainer = () => {
@@ -178,6 +197,7 @@ const displayController = (function () {
 
   const mountNewGameButton = () => {
     const newGameButton = document.createElement("button");
+    newGameButton.setAttribute("id", "newGame-button");
     newGameButton.textContent = "NEW GAME";
     newGameButton.addEventListener("click", () => {
       unmountNewGameButton();
@@ -192,15 +212,36 @@ const displayController = (function () {
     document.body.removeChild(newGameButton);
   };
 
+  const mountStartGameButton = () => {
+    const startGameButton = document.createElement("button");
+    startGameButton.setAttribute("id", "startGame-button");
+    startGameButton.textContent = "START";
+    startGameButton.addEventListener("click", () => {
+      gameOne = game();
+      gameOne.startGame();
+      if (gameOne.getWinnerFound()) {
+        startGameButton.textContent = "START";
+      } else {
+        startGameButton.textContent = "RESTART";
+      }
+    });
+    document.body.appendChild(startGameButton);
+  };
+
+  const changeStartButtonName = (newName) => {
+    const startGameButton = document.querySelector("#startGame-button");
+    startGameButton.textContent = newName;
+  };
+
   return {
     renderGameboard,
     mountNewGameButton,
     unmountNewGameButton,
+    mountStartGameButton,
     unableGameboard,
+    setGameMasterMessage,
+    changeStartButtonName,
   };
 })();
 
-let gameOne = game();
-gameOne.startGame();
-
-console.log(`Thanks for playing!`);
+displayController.mountStartGameButton();
