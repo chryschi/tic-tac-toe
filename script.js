@@ -119,7 +119,7 @@ function game() {
     }
     gameboard.setMarker(currentPlayer.symbol, positionIndex);
     numberOfFilledFields++;
-    if (numberOfFilledFields > -1) {
+    if (numberOfFilledFields > 4) {
       winnerFound = gameboard.checkWin(currentPlayer.symbol, positionIndex);
       if (winnerFound) {
         winnerPlayer = currentPlayer;
