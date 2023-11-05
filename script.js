@@ -60,6 +60,28 @@ function player(name, symbol) {
   return { getName, symbol, setName };
 }
 
+const playGame = () => {
+  const gameOne = game();
+  gameOne.startGame();
+
+  for (let i = 0; i < 9; i++) {
+    gameOne.playTurn(gameOne.getCurrentPlayer());
+    if (i > 3) {
+      if (gameOne.getWinnerFound()) {
+        console.log(`Congrats! ${gameOne.getWinner().getName()} has won!`);
+        break;
+      }
+    }
+  }
+  if (!gameOne.getWinnerFound()) {
+    console.log(`It's a tie.`);
+  }
+  // continuePlaying = prompt(
+  //   `Down for another game? Press "Enter" for yes, submit anything else than "Y" or Press "Cancel" for no`,
+  //   "Y"
+  // );
+};
+
 function game() {
   const playerOne = player("Player 1", "X");
   const playerTwo = player("Player 2", "O");
@@ -85,19 +107,20 @@ function game() {
 
   const startGame = () => {
     gameboard.initBoard();
+    displayController.renderGameboard();
     console.log("Welcome to Tic Tac Toe!");
 
-    let playerOneName = prompt(
-      "How does Player 1 want to be called?",
-      "Hello Kitty"
-    );
-    playerOne.setName(playerOneName);
+    // let playerOneName = prompt(
+    //   "How does Player 1 want to be called?",
+    //   "Hello Kitty"
+    // );
+    // playerOne.setName(playerOneName);
 
-    let playerTwoName = prompt(
-      "How does Player 2 want to be called?",
-      "Wolfgang"
-    );
-    playerTwo.setName(playerTwoName);
+    // let playerTwoName = prompt(
+    //   "How does Player 2 want to be called?",
+    //   "Wolfgang"
+    // );
+    // playerTwo.setName(playerTwoName);
 
     currentPlayer = playerOne;
 
@@ -105,19 +128,19 @@ function game() {
     gameboard.displayBoard();
   };
 
+  const randomPosition = () => Math.floor(Math.random() * 9);
+
   const playTurn = (currentPlayer) => {
     const currentPlayerName = currentPlayer.getName();
-    let positionIndex = prompt(
-      `It's ${currentPlayerName}'s turn! (Submit a number from 0 to 8 corresponding to the position on the tic-tac-toe gameboard)`,
-      8
-    );
+    let positionIndex = randomPosition();
+
     while (gameboard.contentOfField(positionIndex) != "") {
-      positionIndex = prompt(
-        `Sorry, that field is already filled. Try another one! (number from 0 to 8)`,
-        8
-      );
+      console.log(`Sorry! Position ${positionIndex} is already filled!`);
+      positionIndex = randomPosition();
     }
+    console.log(`${currentPlayerName} picked position ${positionIndex}!`);
     gameboard.setMarker(currentPlayer.symbol, positionIndex);
+    displayController.renderGameboard();
     numberOfFilledFields++;
     if (numberOfFilledFields > 4) {
       winnerFound = gameboard.checkWin(currentPlayer.symbol, positionIndex);
@@ -135,34 +158,38 @@ function game() {
   const getWinnerFound = () => winnerFound;
   const getWinner = () => winnerPlayer;
 
-  return { startGame, playTurn, getCurrentPlayer, getWinnerFound, getWinner };
+  return {
+    startGame,
+    playTurn,
+    getCurrentPlayer,
+    getWinnerFound,
+    getWinner,
+  };
 }
 
-const playGame = () => {
-  const gameOne = game();
-  gameOne.startGame();
+// handle DOM
+const displayController = (function () {
+  const gameboardContainer = document.querySelector("#gameboard-container");
 
-  for (let i = 0; i < 9; i++) {
-    gameOne.playTurn(gameOne.getCurrentPlayer());
-    if (i > 3) {
-      if (gameOne.getWinnerFound()) {
-        console.log(`Congrats! ${gameOne.getWinner().getName()} has won!`);
-        break;
-      }
+  const renderGameboard = () => {
+    emptyGameboardContainer();
+    for (let i = 0; i < 9; i++) {
+      const field = document.createElement("div");
+      field.setAttribute("id", `${i}`);
+      field.textContent = `${gameboard.contentOfField(i)}`;
+      gameboardContainer.appendChild(field);
     }
-  }
-  if (!gameOne.getWinnerFound()) {
-    console.log(`It's a tie.`);
-  }
-  continuePlaying = prompt(
-    `Down for another game? Press "Enter" for yes, submit anything else than "Y" or Press "Cancel" for no`,
-    "Y"
-  );
-};
+  };
 
-let continuePlaying;
-do {
-  playGame();
-} while (continuePlaying === "Y");
+  const emptyGameboardContainer = () => {
+    while (gameboardContainer.firstChild !== null) {
+      gameboardContainer.removeChild(gameboardContainer.lastChild);
+    }
+  };
+
+  return { renderGameboard };
+})();
+
+playGame();
 
 console.log(`Thanks for playing!`);
