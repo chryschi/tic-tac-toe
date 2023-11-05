@@ -1,0 +1,14 @@
+#gameboard-container {
+  height: 96px;
+  width: 96px;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+#gameboard-container > div {
+  border-style: solid;
+  border-color: black;
+  border-width: 1px;
+  width: 30px;
+  height: 30px;
+}
