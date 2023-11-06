@@ -226,11 +226,11 @@ const displayController = (function () {
 
   return {
     renderGameboard,
-    mountStartGameButton,
+    enableGameboard,
     disableGameboard,
     setGameMasterMessage,
+    mountStartGameButton,
     changeStartButtonName,
-    enableGameboard,
   };
 })();
 
